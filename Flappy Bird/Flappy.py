@@ -36,37 +36,85 @@ class bird(pygame.sprite.Sprite):
         for i in range(1,4):
             birdload=pygame.image.load(f"bird{i}.png")
             self.birdimgs.append(birdload)
-        self.img=self.birdimgs[self.index]
+        self.image=self.birdimgs[self.index]
         self.rect=self.image.get_rect()
-        self.rect.centre=[x,y]
+        self.rect.center=[x,y]
         self.vertspe=0
         self.clicked=False
     #update function
     def update(self):
         global fly,gameo
         if fly==True:
-            self.vertspe+=0.8
-            if self.vertspe>6:
-                self.vertspe=6
+            self.vertspe+=0.1
+            if self.vertspe>3:
+                self.vertspe=3
             if self.rect.bottom<768:
                 self.rect.y+=int(self.vertspe)
         #jumping of flappy
         if gameo==False:
             if pygame.mouse.get_pressed()[0]==1 and not self.clicked:
                 self.clicked=True
-                self.vertspe=-10
+                self.vertspe=-7
             if pygame.mouse.get_pressed()[0]==0:
                 self.clicked=False
             #bird animation
-            flapcooldown=6
+            flapcooldown=25
             self.countingbirds+=1
-            
+            if self.countingbirds>flapcooldown:
+                self.countingbirds=0
+                self.index+=1
+                if self.index>=3:
+                    self.index=0
+                self.image=self.birdimgs[self.index]
+            self.image=pygame.transform.rotate(self.birdimgs[self.index],self.vertspe *-2)
+        else:
+            self.image=pygame.transform.rotate(self.birdimgs[self.index])
+class pipe(pygame.sprite.Sprite):
+    def __init__(self,x,y,pos):
+        super().__init__()
+        self.image=pygame.image.load("pipe.png")
+        self.rect=self.image.get_rect()
+        if pos==1:#top
+            self.image=pygame.transform.flip(self.image,False,True)
+            self.rect.bottomleft=[x,y-int(pipegap / 2)]
+        if pos==2:#bottom
+            self.rect.bottomleft=[x,y+int(pipegap / 2)]
+        def update(self):
+            self.rect.x-=scrspe
+            if self.rext.x<=0:
+                self.kill()
+#bird object
+birdobj=bird(100,384)
+birdgrp=pygame.sprite.Group()
+birdgrp.add(birdobj)
+#pipe group
+pipegrp=pygame.sprite.Group()
 #while loop
 run=True
 while run:
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
             run=False
+        if event.type==MOUSEBUTTONDOWN and not fly and not gameo:
+            fly=True
     screen.blit(bgload,(0,0))
+    birdgrp.draw(screen)
+    birdgrp.update()
+    pipegrp.draw(screen)
+    screen.blit(groload,(gscroll,600))
+    gscroll-=scrspe
+    if abs(gscroll)>37:
+        gscroll=0
+    #pipe generation
+    if fly and not gameo:
+        curtime=pygame.time.get_ticks()
+        if curtime-lastpigen>pifreq:
+            pipeheight=random.randint(-100,100)
+            botpipe=pipe(864,384+pipeheight,2)
+            topipe=pipe(864,384+pipeheight,1)
+            pipegrp.add(botpipe)
+            pipegrp.add(topipe)
+            lastpigen=curtime
+        pipegrp.update()
     pygame.display.update()
 pygame.quit()
