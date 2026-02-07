@@ -6,7 +6,7 @@ screen=pygame.display.set_mode((864,768))
 clock=pygame.time.Clock()
 framer=60
 pygame.display.set_caption("Flappy Bird")
-font=pygame.font.SysFont("Merlin",30)
+font=pygame.font.SysFont("Merlin",50)
 #gaming variable
 gscroll=0
 scrspe=5
@@ -54,7 +54,7 @@ class bird(pygame.sprite.Sprite):
         if gameo==False:
             if pygame.mouse.get_pressed()[0]==1 and not self.clicked:
                 self.clicked=True
-                self.vertspe=-7
+                self.vertspe=-5
             if pygame.mouse.get_pressed()[0]==0:
                 self.clicked=False
             #bird animation
@@ -68,7 +68,7 @@ class bird(pygame.sprite.Sprite):
                 self.image=self.birdimgs[self.index]
             self.image=pygame.transform.rotate(self.birdimgs[self.index],self.vertspe *-2)
         else:
-            self.image=pygame.transform.rotate(self.birdimgs[self.index])
+            self.image=pygame.transform.rotate(self.birdimgs[self.index],-90)
 class pipe(pygame.sprite.Sprite):
     def __init__(self,x,y,pos):
         super().__init__()
@@ -76,12 +76,12 @@ class pipe(pygame.sprite.Sprite):
         self.rect=self.image.get_rect()
         if pos==1:#top
             self.image=pygame.transform.flip(self.image,False,True)
-            self.rect.bottomleft=[x,y-int(pipegap / 2)]
-        if pos==2:#bottom
-            self.rect.bottomleft=[x,y+int(pipegap / 2)]
-        def update(self):
+            self.rect.bottomleft=(x,y-int(pipegap // 2))
+        elif pos==2:#bottom
+            self.rect.topleft=(x,y+int(pipegap // 2))
+    def update(self):
             self.rect.x-=scrspe
-            if self.rext.x<=0:
+            if self.rect.x<=0:
                 self.kill()
 #bird object
 birdobj=bird(100,384)
@@ -102,14 +102,27 @@ while run:
     birdgrp.update()
     pipegrp.draw(screen)
     screen.blit(groload,(gscroll,600))
+    #scoring
+    if len(pipegrp)>0:
+        bird1=birdgrp.sprites()[0] 
+        first_pipe=pipegrp.sprites()[0]
+        if bird1.rect.left>first_pipe.rect.left and bird1.rect.right<first_pipe.rect.right and not pipepass:
+            pipepass=True
+        if pipepass and bird1.rect.left>first_pipe.rect.right:
+            score+=1
+            pipepass=False
+    text(str(score),font,"red",20,20)
     gscroll-=scrspe
     if abs(gscroll)>37:
         gscroll=0
+    #pipe collision
+    if pygame.sprite.groupcollide(birdgrp,pipegrp,False,False) or birdobj.rect.top<0 or birdobj.rect.bottom>600:
+        gameo=True
     #pipe generation
     if fly and not gameo:
         curtime=pygame.time.get_ticks()
         if curtime-lastpigen>pifreq:
-            pipeheight=random.randint(-100,100)
+            pipeheight=random.randint(-150,150)
             botpipe=pipe(864,384+pipeheight,2)
             topipe=pipe(864,384+pipeheight,1)
             pipegrp.add(botpipe)
