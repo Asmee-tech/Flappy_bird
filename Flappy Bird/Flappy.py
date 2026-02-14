@@ -111,7 +111,10 @@ while run:
             pipepass=True
         if pipepass and bird1.rect.left>first_pipe.rect.right:
             score+=1
+            print(score)
             pipepass=False
+    text(str(score),font,"red",20,20)
+
     gscroll-=scrspe
     if abs(gscroll)>37:
         gscroll=0
@@ -129,6 +132,5 @@ while run:
             pipegrp.add(topipe)
             lastpigen=curtime
         pipegrp.update()
-    text(str(score),font,"red",20,20)
     pygame.display.update()
 pygame.quit()
