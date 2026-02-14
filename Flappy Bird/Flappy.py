@@ -25,6 +25,12 @@ resload=pygame.image.load("restart.png")
 def text(txt,font,txtcol,x,y):
     txthold=font.render(txt,True,txtcol)
     screen.blit(txthold,(x,y))
+def res():
+    global score
+    pipegrp.empty()
+    birdobj.rect.x=100
+    birdobj.rect.y=384
+    score=0
 #class for bird
 class bird(pygame.sprite.Sprite):
     def __init__(self,x,y):
@@ -76,13 +82,29 @@ class pipe(pygame.sprite.Sprite):
         self.rect=self.image.get_rect()
         if pos==1:#top
             self.image=pygame.transform.flip(self.image,False,True)
-            self.rect.bottomleft=(x,y-int(pipegap // 2))
-        elif pos==2:#bottom
-            self.rect.topleft=(x,y+int(pipegap // 2))
+            self.rect.bottomleft=[x,y-int(pipegap / 2)]
+        elif pos==-1:#bottom
+            self.rect.topleft=[x,y+int(pipegap / 2)]
     def update(self):
             self.rect.x-=scrspe
-            if self.rect.x<=0:
+            if self.rect.right<0:
                 self.kill()
+#restart class
+class restart():
+    def __init__(self,x,y,img):
+        self.img=img
+        self.rect=self.img.get_rect()
+        self.rect.topleft=(x,y)
+    def draw(self):
+        pressed=False
+        mpos=pygame.mouse.get_pos()
+        if self.rect.collidepoint(mpos):
+            if pygame.mouse.get_pressed()[0]==1:
+                pressed=True
+        screen.blit(self.img,(self.rect.x,self.rect.y))
+        return pressed
+#buttton object
+re=restart(432,384,resload)
 #bird object
 birdobj=bird(100,384)
 birdgrp=pygame.sprite.Group()
@@ -126,11 +148,15 @@ while run:
         curtime=pygame.time.get_ticks()
         if curtime-lastpigen>pifreq:
             pipeheight=random.randint(-150,150)
-            botpipe=pipe(864,384+pipeheight,2)
             topipe=pipe(864,384+pipeheight,1)
+            botpipe=pipe(864,384+pipeheight,-1)
             pipegrp.add(botpipe)
             pipegrp.add(topipe)
             lastpigen=curtime
         pipegrp.update()
+    if gameo==True:
+        if re.draw():
+            gameo=False
+            res()
     pygame.display.update()
 pygame.quit()
